@@ -114,16 +114,3 @@ Use Wireshark or `tcpdump` to inspect UDP packets.
 ## 📝 License
 
 This project is licensed under the [MIT License](LICENSE).
-
----
-
-## 👨‍💻 Author
-
-**Yousef Samet**  
-[GitHub](https://github.com/yousefsmt) • [LinkedIn](https://linkedin.com/in/your-link)
-
----
-
-## 🤝 Contributing
-
-Pull requests and issues are welcome! Feel free to open a discussion or suggest new features, improvements, or fixes.
