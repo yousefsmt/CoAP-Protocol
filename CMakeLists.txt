@@ -1,29 +1,158 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 
-# Project name and language
-project(MyCppProject LANGUAGES CXX)
-
-# Specify the C++ standard
+# ================================
+# Global settings
+# ================================
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Include directory for header files
-include_directories(include)
-
-# Source files
-set(SOURCES
-    src/main.cpp 
-    src/admin.cpp  
-    src/airport.cpp  
-    src/customer.cpp  
-    src/date.cpp  
-    src/domesticcities.cpp  
-    src/domesticflights.cpp  
-    src/food.cpp  
-    src/foreigncities.cpp  
-    src/foreignflights.cpp   
-    src/tax.cpp
+# ================================
+# Project
+# ================================
+project(CoAP
+    VERSION 1.0.0
+    DESCRIPTION "Constrained Application Protocol"
+    LANGUAGES CXX
 )
 
-# Create executable
-add_executable(${PROJECT_NAME} ${SOURCES})
+# if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+#     set(CMAKE_BUILD_TYPE Release CACHE STRING
+#         "Choose build type: Debug, Release, RelWithDebInfo, MinSizeRel" FORCE)
+# endif()
+
+# ================================
+# Compiler checks
+# ================================
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
+        message(FATAL_ERROR "GCC >= 8.0 required")
+    endif()
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
+        message(FATAL_ERROR "Clang >= 6.0 required")
+    endif()
+elseif(MSVC)
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.20)
+        message(FATAL_ERROR "MSVC >= 19.20 required (Visual Studio 2019+)")
+    endif()
+endif()
+
+message(STATUS "Building ${PROJECT_NAME} v${PROJECT_VERSION} on ${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}")
+
+# ================================
+# Sources & Executable
+# ================================
+set(SOURCES
+    src/main.cpp
+    src/messages.cpp
+)
+
+add_executable(coap ${SOURCES})
+target_include_directories(coap PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# ================================
+# Threads
+# ================================
+# find_package(Threads REQUIRED)
+# target_link_libraries(coap PRIVATE Threads::Threads)
+
+# find_package(nlohmann_json 3.2.0 REQUIRED)
+# target_link_libraries(coap PRIVATE nlohmann_json::nlohmann_json)
+
+# ================================
+# Warnings & Security flags
+# ================================
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(coap PRIVATE 
+        -Wall -Wextra -Wpedantic
+        -Werror
+        -Wconversion -Wsign-conversion
+        -Wshadow
+        -Wnull-dereference
+        -fstack-protector-strong
+        -fPIE -fPIC
+        $<$<CONFIG:Release>:-O2>
+    )
+elseif(MSVC)
+    target_compile_options(coap PRIVATE 
+        /W4 /WX
+        /permissive-
+        /guard:cf
+        /GS
+    )
+endif()
+
+# ================================
+# Static analysis (optional)
+# ================================
+find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+if(CLANG_TIDY_EXE)
+    message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+    set_target_properties(coap PROPERTIES
+        CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy"
+    )
+endif()
+
+find_program(CLANG_FORMAT_EXE NAMES clang-format)
+if(CLANG_FORMAT_EXE)
+    message(STATUS "clang-format found: ${CLANG_FORMAT_EXE}")
+    add_custom_target(format
+        COMMAND ${CLANG_FORMAT_EXE} -i
+            ${SOURCES}
+            ${CMAKE_SOURCE_DIR}/include/*.h
+        COMMENT "Running clang-format on sources"
+    )
+endif()
+
+find_program(CPPCHECK_EXE NAMES cppcheck)
+if(CPPCHECK_EXE)
+    message(STATUS "cppcheck found: ${CPPCHECK_EXE}")
+    set(CMAKE_CXX_CPPCHECK
+        "${CPPCHECK_EXE};--enable=all;--inconclusive;--quiet;--std=c++17")
+else()
+    message(WARNING "cppcheck not found!")
+endif()
+
+option(ENABLE_SANITIZERS "Enable runtime sanitizers" ON)
+if(ENABLE_SANITIZERS AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+        target_compile_options(coap PRIVATE -fsanitize=address,undefined)
+        target_link_options(coap PRIVATE -fsanitize=address,undefined)
+    endif()
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(coap PRIVATE
+        -D_FORTIFY_SOURCE=2
+        -fstack-clash-protection
+    )
+endif()
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT result OUTPUT output)
+if(result)
+    set_property(TARGET coap PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+else()
+    message(WARNING "IPO/LTO not supported: ${output}")
+endif()
+
+# ================================
+# Tests
+# ================================
+option(BUILD_TESTS "Build unit tests" OFF)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+# ================================
+# Install
+# ================================
+install(TARGETS coap RUNTIME DESTINATION bin)
+
+# ================================
+# Packaging
+# ================================
+include(CPack)
