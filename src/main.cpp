@@ -10,19 +10,26 @@ int main()
     uint32_t header_msg{0};
     uint8_t  version{1};
     uint8_t  type{3};
+    uint8_t  token_length{5};
+    // uint8_t  code{3};
 
-    Message& instance = Message::MessageGetInstance();
+    Message& instance = Message::messageGetInstance();
 
-    instance.AddTypeToHeader(header_msg, type);
-    std::cout << std::bitset<32>(header_msg) << std::endl;
+    std::cout << "Start generation header\n";
+    instance.addTypeToHeader(header_msg, type);
+    std::cout << "Add type to header: " << std::bitset<32>(header_msg) << std::endl;
 
-    instance.AddVersionToHeader(header_msg, version);
-    std::cout << std::bitset<32>(header_msg) << std::endl;
+    instance.addVersionToHeader(header_msg, version);
+    std::cout << "Add version to header: " << std::bitset<32>(header_msg) << std::endl;
 
-    // instance.AddCodeToHeader();
-    // instance.AddTokenLengthToHeader();
-    // instance.AddVersionToHeader();
-    // instance.CombineHeaderField();
+    instance.addTokenLengthToHeader(header_msg, token_length);
+    std::cout << "Add token length to header: " << std::bitset<32>(header_msg) << std::endl;
+
+    // instance.addCodeToHeader(header_msg, code);
+    // std::cout << "Add code to header: " << std::bitset<32>(header_msg) << std::endl;
+
+    // instance.addCodeToHeader();
+    // instance.addTokenLengthToHeader();
 
     return 0;
 }

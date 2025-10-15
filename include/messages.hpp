@@ -35,15 +35,20 @@ namespace coap
         MessageType message_type;
 
     public:
-        static Message& MessageGetInstance();
+        static Message& messageGetInstance();
 
         Message(const Message&)            = delete;
         Message& operator=(const Message&) = delete;
 
-        int AddVersionToHeader(uint32_t& header_msg, uint8_t version);
-        int AddTypeToHeader(uint32_t& header_msg, uint8_t type);
-        int AddTokenLengthToHeader(uint32_t& header_msg);
-        int AddCodeToHeader(uint32_t& header_msg);
+        int addVersionToHeader(uint32_t& header_msg, uint8_t version);
+
+        int addTypeToHeader(uint32_t& header_msg, uint8_t type);
+
+        int addTokenLengthToHeader(uint32_t& header_msg, uint8_t token_length);
+
+        int addCodeToHeader(uint32_t& header_msg, uint8_t code);
+
+        int addMessageIdToHeader(uint32_t& header_msg, uint16_t message_id);
     };
 
 } // namespace coap
