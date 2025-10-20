@@ -32,7 +32,7 @@ namespace coap
                 header_msg |= (static_cast<uint32_t>(type) << 28U);
                 break;
             case 1U:
-                message_type = MessageType::NONCONFIRMABLE;
+                message_type = MessageType::NON_CONFIRMABLE;
                 header_msg |= (static_cast<uint32_t>(type) << 28U);
                 break;
             case 2U:
@@ -65,15 +65,27 @@ namespace coap
         return 0;
     }
 
-    // int Message::addCodeToHeader(uint32_t& header_msg, uint8_t code)
-    // {
-    //     return 0;
-    // }
+    int Message::addClassToCode(uint8_t& code, uint8_t three_bit_class)
+    {
+        
+        return 0;
+    }
 
-    // int addMessageIdToHeader(uint32_t& header_msg, uint16_t message_id)
-    // {
+    int Message::addDetailToCode(uint8_t& code, uint8_t five_bit_detail)
+    {
 
-    //     return 0;
-    // }
+        return 0;
+    }
+
+    int Message::addCodeToHeader(uint32_t& header_msg, uint8_t code)
+    {
+        return 0;
+    }
+
+    int Message::addMessageIdToHeader(uint32_t& header_msg, uint16_t message_id)
+    {
+
+        return 0;
+    }
 
 } // namespace coap
