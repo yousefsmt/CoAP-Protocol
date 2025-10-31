@@ -11,81 +11,97 @@ namespace coap
         return make_instance;
     }
 
-    int Message::addVersionToHeader(uint32_t& header_msg, uint8_t version)
+    CoapStatus Message::addVersionToHeader(uint32_t& header_msg, uint8_t version)
     {
         if (version != 1U)
         {
-            return -1;
+            return CoapStatus::FORMAT_ERROR;
         }
 
         header_msg |= (static_cast<uint32_t>(version & 0x3) << 30U);
 
-        return 0;
+        return CoapStatus::SUCCESS;
     }
 
-    int Message::addTypeToHeader(uint32_t& header_msg, uint8_t type)
+    CoapStatus Message::addTypeToHeader(uint32_t& header_msg, uint8_t type)
     {
         switch (type)
         {
             case 0U:
-                message_type = MessageType::CONFIRMABLE;
+                m_message_type = MessageType::CONFIRMABLE;
                 header_msg |= (static_cast<uint32_t>(type) << 28U);
                 break;
             case 1U:
-                message_type = MessageType::NON_CONFIRMABLE;
+                m_message_type = MessageType::NON_CONFIRMABLE;
                 header_msg |= (static_cast<uint32_t>(type) << 28U);
                 break;
             case 2U:
-                message_type = MessageType::ACKNOWLEDGEMENT;
+                m_message_type = MessageType::ACKNOWLEDGEMENT;
                 header_msg |= (static_cast<uint32_t>(type) << 28U);
                 break;
             case 3U:
-                message_type = MessageType::RESET;
+                m_message_type = MessageType::RESET;
                 header_msg |= (static_cast<uint32_t>(type) << 28U);
                 break;
             default:
-                std::cerr << "ERROR: cannot allocate type message\n";
-                return -1;
+                return CoapStatus::FORMAT_ERROR;
                 break;
         }
 
-        return 0;
+        return CoapStatus::SUCCESS;
     }
 
-    int Message::addTokenLengthToHeader(uint32_t& header_msg, uint8_t token_length)
+    CoapStatus Message::addTokenLengthToHeader(uint32_t& header_msg, uint8_t token_length)
     {
         if (token_length > 8U)
         {
-            std::cerr << "ERROR: message format does not true\n";
-            return -1;
+            return CoapStatus::FORMAT_ERROR;
         }
 
         header_msg |= (static_cast<uint32_t>(token_length) << 24U);
 
-        return 0;
+        return CoapStatus::SUCCESS;
     }
 
-    int Message::addClassToCode(uint8_t& code, uint8_t three_bit_class)
+    CoapStatus Message::addCodeToHeader(uint32_t& header_msg, uint8_t code)
     {
-        
-        return 0;
+        if (code == 0)
+        {
+            return CoapStatus::SUCCESS;
+        }
+
+        uint8_t class_msg = (code & (0xE0)) >> 5U;
+        switch (class_msg)
+        {
+            case 0U:
+                m_class_type = ClassType::REQUEST;
+                break;
+            case 2U:
+                m_class_type = ClassType::SUCCESS_RESPONSE;
+                break;
+            case 4U:
+                m_class_type = ClassType::CLIENT_ERROR_RESPONSE;
+                break;
+            case 5U:
+                m_class_type = ClassType::SERVER_ERROR_RESPONSE;
+                break;
+            default:
+                return CoapStatus::FORMAT_ERROR;
+                break;
+        }
+
+        uint8_t detail_msg = code & (0x1F);
+
+        header_msg |= (static_cast<uint32_t>(class_msg) << 21);
+        header_msg |= (static_cast<uint32_t>(detail_msg) << 16);
+
+        return CoapStatus::SUCCESS;
     }
 
-    int Message::addDetailToCode(uint8_t& code, uint8_t five_bit_detail)
-    {
+    // CoapStatus Message::addMessageIdToHeader(uint32_t& header_msg, uint16_t message_id)
+    // {
 
-        return 0;
-    }
-
-    int Message::addCodeToHeader(uint32_t& header_msg, uint8_t code)
-    {
-        return 0;
-    }
-
-    int Message::addMessageIdToHeader(uint32_t& header_msg, uint16_t message_id)
-    {
-
-        return 0;
-    }
+    //     return CoapStatus::SUCCESS;
+    // }
 
 } // namespace coap
