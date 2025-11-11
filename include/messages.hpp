@@ -107,6 +107,12 @@ namespace coap
         CoapStatus addCodeToHeader(uint32_t& header_msg, uint8_t code);
 
         CoapStatus addMessageIdToHeader(uint32_t& header_msg, uint16_t message_id);
+
+        CoapStatus addToken(uint64_t& token, uint8_t token_length);
+
+        CoapStatus addOptions(uint32_t& options);
+
+        CoapStatus addPayload(uint32_t& payload);
     };
 
 } // namespace coap

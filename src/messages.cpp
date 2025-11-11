@@ -1,5 +1,9 @@
 #include "messages.hpp"
 
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <cstdlib>
 #include <iostream>
 
 namespace coap
@@ -92,13 +96,41 @@ namespace coap
 
         uint8_t detail_msg = code & (0x1F);
 
-        header_msg |= (static_cast<uint32_t>(class_msg) << 21);
-        header_msg |= (static_cast<uint32_t>(detail_msg) << 16);
+        header_msg |= (static_cast<uint32_t>(class_msg) << 21U);
+        header_msg |= (static_cast<uint32_t>(detail_msg) << 16U);
 
         return CoapStatus::SUCCESS;
     }
 
     // CoapStatus Message::addMessageIdToHeader(uint32_t& header_msg, uint16_t message_id)
+    // {
+
+    //     return CoapStatus::SUCCESS;
+    // }
+
+    CoapStatus addToken(uint64_t& token, uint8_t token_length)
+    {
+        ssize_t is_correct{};
+        int     file_descriptor{};
+
+        file_descriptor = open("/dev/urandom", O_RDONLY);
+        is_correct      = read(file_descriptor, &token, token_length);
+        if (is_correct < 0)
+        {
+            return CoapStatus::FORMAT_ERROR;
+        }
+        close(file_descriptor);
+
+        return CoapStatus::SUCCESS;
+    }
+
+    // CoapStatus addOptions(uint32_t& options)
+    // {
+
+    //     return CoapStatus::SUCCESS;
+    // }
+
+    // CoapStatus addPayload(uint32_t& payload)
     // {
 
     //     return CoapStatus::SUCCESS;
